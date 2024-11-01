@@ -60,6 +60,7 @@ describe('contract', () => {
 
 		afterAll(async () => {
 			await closeOpenConnection(web3);
+			await closeOpenConnection(contract);
 		});
 
 		it('should deploy the contract', () => {

@@ -372,7 +372,7 @@ export const signTxAndSendEIP1559 = async (
 		checkRevertBeforeSending: false,
 	});
 
-	await closeOpenConnection(web3);
+	// await closeOpenConnection(web3);
 
 	return result;
 };
@@ -396,7 +396,7 @@ export const signTxAndSendEIP2930 = async (
 		checkRevertBeforeSending: false,
 	});
 
-	await closeOpenConnection(web3);
+	// await closeOpenConnection(web3);
 
 	return result;
 };
