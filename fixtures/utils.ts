@@ -32,6 +32,7 @@ export const sleep = async (ms: number) =>
 			clearTimeout(id);
 			resolve(true);
 		}, ms);
+		id.unref();
 	});
 
 type InObj = {

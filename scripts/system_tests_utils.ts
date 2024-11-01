@@ -165,7 +165,8 @@ export const closeOpenConnection = async (web3Context: Web3Context) => {
 		(web3Context.provider as unknown as Web3BaseProvider).disconnect();
 
 		await new Promise(resolve => {
-			setTimeout(resolve, 1);
+			const timer = setTimeout(resolve, 1);
+			timer.unref();
 		});
 	}
 };
@@ -367,7 +368,13 @@ export const signTxAndSendEIP1559 = async (
 		from: acc.address,
 	};
 
-	return web3.eth.sendTransaction(txObj, undefined, { checkRevertBeforeSending: false });
+	const result = await web3.eth.sendTransaction(txObj, undefined, {
+		checkRevertBeforeSending: false,
+	});
+
+	await closeOpenConnection(web3);
+
+	return result;
 };
 
 export const signTxAndSendEIP2930 = async (
@@ -385,7 +392,13 @@ export const signTxAndSendEIP2930 = async (
 		from: acc.address,
 	};
 
-	return web3.eth.sendTransaction(txObj, undefined, { checkRevertBeforeSending: false });
+	const result = await web3.eth.sendTransaction(txObj, undefined, {
+		checkRevertBeforeSending: false,
+	});
+
+	await closeOpenConnection(web3);
+
+	return result;
 };
 
 export const signAndSendContractMethodEIP1559 = async (
