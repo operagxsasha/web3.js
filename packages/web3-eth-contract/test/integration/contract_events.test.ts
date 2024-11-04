@@ -16,9 +16,8 @@ along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // import { EventLog } from 'web3-types';
-import { Contract } from '../../src';
+import { Contract, EventLog } from '../../src';
 import { BasicAbi, BasicBytecode } from '../shared_fixtures/build/Basic';
-// import { processAsync } from '../shared_fixtures/utils';
 import {
 	getSystemTestProvider,
 	describeIf,
@@ -58,119 +57,125 @@ describe('contract', () => {
 		contractDeployed = await contract.deploy(deployOptions).send(sendOptions);
 	});
 
-	// describe('events', () => {
-	// 	itIf(isWs)('should trigger the "contract.events.<eventName>"', async () => {
-	// 		// eslint-disable-next-line jest/no-standalone-expect
-	// 		return expect(
-	// 			processAsync(async (resolve, reject) => {
-	// 				const event = contractDeployed.events.MultiValueEvent();
+	describeIf(isWs)('events', () => {
+		it('should trigger the "contract.events.<eventName>"', async () => {
+			const event = contractDeployed.events.MultiValueEvent();
 
-	// 				event.on('data', resolve);
-	// 				event.on('error', reject);
+			const eventPromise = new Promise((resolve, reject) => {
+				event.on('data', resolve);
+				event.on('error', reject);
+			});
 
-	// 				// trigger event
-	// 				await contractDeployed.methods
-	// 					.firesMultiValueEvent('value', 12, true)
-	// 					.send(sendOptions);
-	// 			}),
-	// 		).resolves.toEqual(
-	// 			expect.objectContaining({
-	// 				event: 'MultiValueEvent',
-	// 			}),
-	// 		);
-	// 	});
+			await contractDeployed.methods
+				.firesMultiValueEvent('value', 12, true)
+				.send(sendOptions);
 
-	// 	itIf(isWs)(
-	// 		'should trigger the "contract.events.<eventName>" for indexed parameters',
-	// 		async () => {
-	// 			const res = await processAsync(async (resolve, reject) => {
-	// 				const event = contractDeployed.events.MultiValueIndexedEvent({
-	// 					filter: { val: 100 },
-	// 				});
+			await expect(eventPromise).resolves.toEqual(
+				expect.objectContaining({
+					event: 'MultiValueEvent',
+				}),
+			);
 
-	// 				event.on('data', resolve);
-	// 				event.on('error', reject);
+			event.removeAllListeners();
+		});
 
-	// 				// trigger event
-	// 				await contractDeployed.methods
-	// 					.firesMultiValueIndexedEvent('value', 12, true)
-	// 					.send(sendOptions);
-	// 				await contractDeployed.methods
-	// 					.firesMultiValueIndexedEvent('value', 100, true)
-	// 					.send(sendOptions);
-	// 			});
-	// 			// eslint-disable-next-line jest/no-standalone-expect
-	// 			expect((res as any)?.event).toBe('MultiValueIndexedEvent');
-	// 			// eslint-disable-next-line jest/no-standalone-expect
-	// 			expect((res as any)?.returnValues.val).toBe(BigInt(100));
-	// 		},
-	// 	);
+		it('should trigger the "contract.events.<eventName>" for indexed parameters', async () => {
+			const event = contractDeployed.events.MultiValueIndexedEvent({
+				filter: { val: 100 },
+			});
 
-	// 	itIf(isWs)(
-	// 		'should trigger when "fromBlock" is passed to contract.events.<eventName>',
-	// 		async () => {
-	// 			// eslint-disable-next-line jest/no-standalone-expect
-	// 			return expect(
-	// 				processAsync(async (resolve, reject) => {
-	// 					const event = contractDeployed.events.MultiValueEvent({
-	// 						fromBlock: 'latest',
-	// 					});
+			const eventPromise = new Promise((resolve, reject) => {
+				event.on('data', resolve);
+				event.on('error', reject);
+			});
 
-	// 					event.on('data', resolve);
-	// 					event.on('error', reject);
+			await contractDeployed.methods
+				.firesMultiValueIndexedEvent('value', 12, true)
+				.send(sendOptions);
+			await contractDeployed.methods
+				.firesMultiValueIndexedEvent('value', 100, true)
+				.send(sendOptions);
 
-	// 					// trigger event
-	// 					await contractDeployed.methods
-	// 						.firesMultiValueEvent('Event Value', 11, false)
-	// 						.send(sendOptions);
-	// 				}),
-	// 			).resolves.toEqual(
-	// 				expect.objectContaining({
-	// 					event: 'MultiValueEvent',
-	// 				}),
-	// 			);
-	// 		},
-	// 	);
+			await expect(eventPromise).resolves.toEqual(
+				expect.objectContaining({
+					event: 'MultiValueIndexedEvent',
+					returnValues: expect.objectContaining({
+						val: BigInt(100),
+					}),
+				}),
+			);
 
-	// 	itIf(isWs)(
-	// 		'should fetch past events when "fromBlock" is passed to contract.events.<eventName>',
-	// 		async () => {
-	// 			const eventValues = [11, 12, 13, 14];
-	// 			// eslint-disable-next-line jest/no-standalone-expect
-	// 			return expect(
-	// 				processAsync(async resolve => {
-	// 					// trigger multiple events
-	// 					for (const eventValue of eventValues) {
-	// 						// Wait for every transaction, before firing the next one, to prevent a possible nonce duplication.
-	// 						// eslint-disable-next-line no-await-in-loop
-	// 						await contractDeployed.methods
-	// 							.firesMultiValueEvent('Event Value', eventValue, false)
-	// 							.send(sendOptions);
-	// 					}
+			event.removeAllListeners();
+		});
 
-	// 					const event = contractDeployed.events.MultiValueEvent({
-	// 						fromBlock: 'earliest',
-	// 					});
+		it('should trigger when "fromBlock" is passed to contract.events.<eventName>', async () => {
+			const event = contractDeployed.events.MultiValueEvent({
+				fromBlock: 'latest',
+			});
 
-	// 					const pastEvents: EventLog[] = [];
-	// 					event.on('data', d => {
-	// 						pastEvents.push(d);
-	// 						if (pastEvents.length === eventValues.length) {
-	// 							resolve(pastEvents);
-	// 						}
-	// 					});
-	// 				}),
-	// 			).resolves.toEqual(
-	// 				expect.arrayContaining([
-	// 					expect.objectContaining({ event: 'MultiValueEvent' }),
-	// 					expect.objectContaining({ event: 'MultiValueEvent' }),
-	// 					expect.objectContaining({ event: 'MultiValueEvent' }),
-	// 					expect.objectContaining({ event: 'MultiValueEvent' }),
-	// 				]),
-	// 			);
-	// 		},
-	// 	);
-	// });
+			const eventPromise = new Promise((resolve, reject) => {
+				event.on('data', resolve);
+				event.on('error', reject);
+			});
+
+			await contractDeployed.methods
+				.firesMultiValueEvent('Event Value', 11, false)
+				.send(sendOptions);
+
+			await expect(eventPromise).resolves.toEqual(
+				expect.objectContaining({
+					event: 'MultiValueEvent',
+				}),
+			);
+
+			event.removeAllListeners();
+		});
+
+		it('should fetch past events when "fromBlock" is passed to contract.events.<eventName>', async () => {
+			const eventValues = [11, 12, 13, 14];
+			const event = contractDeployed.events.MultiValueEvent({
+				fromBlock: 'earliest',
+			});
+
+			const eventPromise = new Promise((resolve, reject) => {
+				const pastEvents: EventLog[] = [];
+				event.on('data', d => {
+					pastEvents.push(d);
+					if (pastEvents.length === eventValues.length) {
+						resolve(pastEvents);
+					}
+				});
+				event.on('error', reject);
+			});
+
+			for (const eventValue of eventValues) {
+				// Wait for every transaction, before firing the next one, to prevent a possible nonce duplication.
+				// eslint-disable-next-line no-await-in-loop
+				await contractDeployed.methods
+					.firesMultiValueEvent('Event Value', eventValue, false)
+					.send(sendOptions);
+			}
+
+			const promises = eventValues.map(eventValue =>
+				contractDeployed.methods
+					.firesMultiValueEvent('Event Value', eventValue, false)
+					.send(sendOptions),
+			);
+
+			await Promise.all(promises);
+
+			await expect(eventPromise).resolves.toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ event: 'MultiValueEvent' }),
+					expect.objectContaining({ event: 'MultiValueEvent' }),
+					expect.objectContaining({ event: 'MultiValueEvent' }),
+					expect.objectContaining({ event: 'MultiValueEvent' }),
+				]),
+			);
+
+			event.removeAllListeners();
+		});
+	});
 
 	describe('events subscription with HTTP', () => {
 		itIf(isHttp)('should fail to subscribe', async () => {
@@ -208,6 +213,7 @@ describe('contract', () => {
 				}),
 			).toHaveLength(2);
 		});
+
 		it('should return all past events using number options', async () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 1', 11, true)
@@ -223,6 +229,7 @@ describe('contract', () => {
 				}),
 			).toHaveLength(2);
 		});
+
 		it('should return all past events using string options', async () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 1', 11, true)
@@ -238,6 +245,7 @@ describe('contract', () => {
 				}),
 			).toHaveLength(2);
 		});
+
 		it('should return all past events using bigint options', async () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 1', 11, true)
@@ -259,47 +267,41 @@ describe('contract', () => {
 		it('should sub and get event using earliest options with allEvents()', async () => {
 			const event = contractDeployed.events.allEvents({ fromBlock: 'earliest' });
 
-			// Create a promise to wait for the event
 			const eventPromise = new Promise((resolve, reject) => {
 				event.on('data', resolve);
 				event.on('error', reject);
 			});
 
-			// trigger event
 			await contractDeployed.methods
 				.firesMultiValueEvent('val test', 12, true)
 				.send(sendOptions);
 
-			// Wait for the event and verify
 			await expect(eventPromise).resolves.toEqual(
 				expect.objectContaining({
 					event: 'MultiValueEvent',
 				}),
 			);
 
-			// Remove all listeners to clean up
 			event.removeAllListeners();
 		});
 
-		// it('should sub allEvents()', async () => {
-		// 	// eslint-disable-next-line jest/no-standalone-expect
-		// 	return expect(
-		// 		processAsync(async (resolve, reject) => {
-		// 			const event = contractDeployed.events.allEvents();
+		it('should sub allEvents()', async () => {
+			const event = contractDeployed.events.allEvents();
 
-		// 			event.on('data', resolve);
-		// 			event.on('error', reject);
+			const eventPromise = new Promise((resolve, reject) => {
+				event.on('data', resolve);
+				event.on('error', reject);
+			});
 
-		// 			// trigger event
-		// 			await contractDeployed.methods
-		// 				.firesMultiValueEvent('Pak1', 12, true)
-		// 				.send(sendOptions);
-		// 		}),
-		// 	).resolves.toEqual(
-		// 		expect.objectContaining({
-		// 			event: 'MultiValueEvent',
-		// 		}),
-		// 	);
-		// });
+			await contractDeployed.methods.firesMultiValueEvent('Pak1', 12, true).send(sendOptions);
+
+			await expect(eventPromise).resolves.toEqual(
+				expect.objectContaining({
+					event: 'MultiValueEvent',
+				}),
+			);
+
+			event.removeAllListeners();
+		});
 	});
 });

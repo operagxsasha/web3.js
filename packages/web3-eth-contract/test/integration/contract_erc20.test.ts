@@ -20,8 +20,8 @@ import { Contract } from '../../src';
 import { ERC20TokenAbi, ERC20TokenBytecode } from '../shared_fixtures/build/ERC20Token';
 import {
 	getSystemTestProvider,
-	// describeIf,
-	// isWs,
+	describeIf,
+	isWs,
 	createTempAccount,
 	createNewAccount,
 	refillAccount,
@@ -29,7 +29,7 @@ import {
 	// signAndSendContractMethodEIP2930,
 	closeOpenConnection,
 } from '../fixtures/system_test_utils';
-// import { processAsync, toUpperCaseHex } from '../shared_fixtures/utils';
+import { toUpperCaseHex } from '../shared_fixtures/utils';
 
 const initialSupply = BigInt('5000000000');
 
@@ -300,31 +300,30 @@ describe('contract', () => {
 				// );
 			});
 
-			// describeIf(isWs)('events', () => {
-			// 	it('should emit transfer event', async () => {
-			// 		const acc2 = await createTempAccount();
-			// 		await expect(
-			// 			processAsync(async resolve => {
-			// 				const event = contractDeployed.events.Transfer();
-			// 				event.on('data', data => {
-			// 					resolve({
-			// 						from: toUpperCaseHex(data.returnValues.from as string),
-			// 						to: toUpperCaseHex(data.returnValues.to as string),
-			// 						value: data.returnValues.value,
-			// 					});
-			// 				});
+			describeIf(isWs)('events', () => {
+				it('should emit transfer event', async () => {
+					const acc2 = await createTempAccount();
+					const event = contractDeployed.events.Transfer();
+					const eventPromise = new Promise((resolve, reject) => {
+						event.on('data', data => {
+							resolve({
+								from: toUpperCaseHex(data.returnValues.from as string),
+								to: toUpperCaseHex(data.returnValues.to as string),
+								value: data.returnValues.value,
+							});
+						});
+						event.on('error', reject);
+					});
 
-			// 				await contractDeployed.methods
-			// 					.transfer(acc2.address, '100')
-			// 					.send(sendOptions);
-			// 			}),
-			// 		).resolves.toEqual({
-			// 			from: toUpperCaseHex(sendOptions.from as string),
-			// 			to: toUpperCaseHex(acc2.address),
-			// 			value: BigInt(100),
-			// 		});
-			// 	});
-			// });
+					await contractDeployed.methods.transfer(acc2.address, '100').send(sendOptions);
+
+					await expect(eventPromise).resolves.toEqual({
+						from: toUpperCaseHex(sendOptions.from as string),
+						to: toUpperCaseHex(acc2.address),
+						value: BigInt(100),
+					});
+				});
+			});
 		});
 	});
 });

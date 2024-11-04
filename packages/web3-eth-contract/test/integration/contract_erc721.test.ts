@@ -20,8 +20,8 @@ import { Contract } from '../../src';
 import { ERC721TokenAbi, ERC721TokenBytecode } from '../shared_fixtures/build/ERC721Token';
 import {
 	getSystemTestProvider,
-	// describeIf,
-	// isWs,
+	describeIf,
+	isWs,
 	createTempAccount,
 	// signAndSendContractMethodEIP1559,
 	// signAndSendContractMethodEIP2930,
@@ -29,10 +29,7 @@ import {
 	refillAccount,
 	closeOpenConnection,
 } from '../fixtures/system_test_utils';
-import {
-	// processAsync,
-	toUpperCaseHex,
-} from '../shared_fixtures/utils';
+import { toUpperCaseHex } from '../shared_fixtures/utils';
 
 describe('contract', () => {
 	describe('erc721', () => {
@@ -299,48 +296,51 @@ describe('contract', () => {
 				// );
 			});
 
-			// describeIf(isWs)('events', () => {
-			// 	it('should emit transfer event', async () => {
-			// 		const acc2 = await createTempAccount();
+			describeIf(isWs)('events', () => {
+				it('should emit transfer event', async () => {
+					const acc2 = await createTempAccount();
+					const event = contractDeployed.events.Transfer();
 
-			// 		await expect(
-			// 			processAsync(async resolve => {
-			// 				const event = contractDeployed.events.Transfer();
-			// 				event.on('data', data => {
-			// 					resolve({
-			// 						from: toUpperCaseHex(data.returnValues.from as string),
-			// 						to: toUpperCaseHex(data.returnValues.to as string),
-			// 						tokenId: data.returnValues.tokenId,
-			// 					});
-			// 				});
+					const eventPromise = new Promise((resolve, reject) => {
+						event.on('data', data => {
+							resolve({
+								from: toUpperCaseHex(data.returnValues.from as string),
+								to: toUpperCaseHex(data.returnValues.to as string),
+								tokenId: data.returnValues.tokenId,
+							});
+						});
+						event.on('error', reject);
+					});
 
-			// 				const receipt = await contractDeployed.methods
-			// 					.awardItem(acc2.address, 'http://my-nft-uri')
-			// 					.send(sendOptions);
+					const receipt = await contractDeployed.methods
+						.awardItem(acc2.address, 'http://my-nft-uri')
+						.send(sendOptions);
 
-			// 				expect(receipt.events).toBeDefined();
-			// 				expect(receipt.events?.Transfer).toBeDefined();
-			// 				expect(receipt.events?.Transfer.event).toBe('Transfer');
-			// 				expect(
-			// 					String(receipt.events?.Transfer.returnValues.from).toLowerCase(),
-			// 				).toBe('0x0000000000000000000000000000000000000000');
-			// 				expect(
-			// 					String(receipt.events?.Transfer.returnValues[0]).toLowerCase(),
-			// 				).toBe('0x0000000000000000000000000000000000000000');
-			// 				expect(
-			// 					String(receipt.events?.Transfer.returnValues.to).toLowerCase(),
-			// 				).toBe(acc2.address.toLowerCase());
-			// 				expect(
-			// 					String(receipt.events?.Transfer.returnValues[1]).toLowerCase(),
-			// 				).toBe(acc2.address.toLowerCase());
-			// 			}),
-			// 		).resolves.toEqual({
-			// 			from: '0x0000000000000000000000000000000000000000',
-			// 			to: toUpperCaseHex(acc2.address),
-			// 			tokenId: BigInt(0),
-			// 		});
-			// 	});
-			// });
+					expect(receipt.events).toBeDefined();
+					expect(receipt.events?.Transfer).toBeDefined();
+					expect(receipt.events?.Transfer.event).toBe('Transfer');
+					expect(String(receipt.events?.Transfer.returnValues.from).toLowerCase()).toBe(
+						'0x0000000000000000000000000000000000000000',
+					);
+					expect(String(receipt.events?.Transfer.returnValues[0]).toLowerCase()).toBe(
+						'0x0000000000000000000000000000000000000000',
+					);
+					expect(String(receipt.events?.Transfer.returnValues.to).toLowerCase()).toBe(
+						acc2.address.toLowerCase(),
+					);
+					expect(String(receipt.events?.Transfer.returnValues[1]).toLowerCase()).toBe(
+						acc2.address.toLowerCase(),
+					);
+
+					await expect(eventPromise).resolves.toEqual({
+						from: '0x0000000000000000000000000000000000000000',
+						to: toUpperCaseHex(acc2.address),
+						tokenId: BigInt(0),
+					});
+
+					event.removeAllListeners();
+				});
+			});
 		});
 	});
 });
