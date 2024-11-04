@@ -15,7 +15,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// import { LogsOutput } from 'web3-types';
+import { LogsOutput } from 'web3-types';
 import { Contract } from '../../src';
 import { ERC20TokenAbi, ERC20TokenBytecode } from '../shared_fixtures/build/ERC20Token';
 import {
@@ -25,8 +25,8 @@ import {
 	createTempAccount,
 	createNewAccount,
 	refillAccount,
-	// signAndSendContractMethodEIP1559,
-	// signAndSendContractMethodEIP2930,
+	signAndSendContractMethodEIP1559,
+	signAndSendContractMethodEIP2930,
 	closeOpenConnection,
 } from '../fixtures/system_test_utils';
 import { toUpperCaseHex } from '../shared_fixtures/utils';
@@ -67,11 +67,11 @@ describe('contract', () => {
 			let pkAccount: { address: string; privateKey: string };
 			let mainAcc: { address: string; privateKey: string };
 
-			// const prepareForTransfer = async (value: string) => {
-			// 	const tempAccount = await createTempAccount();
-			// 	await contractDeployed.methods.transfer(pkAccount.address, value).send(sendOptions);
-			// 	return tempAccount;
-			// };
+			const prepareForTransfer = async (value: string) => {
+				const tempAccount = await createTempAccount();
+				await contractDeployed.methods.transfer(pkAccount.address, value).send(sendOptions);
+				return tempAccount;
+			};
 
 			beforeAll(async () => {
 				mainAcc = await createTempAccount();
@@ -192,112 +192,112 @@ describe('contract', () => {
 					expect(catchError).toBe(true);
 				});
 
-				// it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
-				// 	'should transfer tokens with local wallet %p',
-				// 	async signAndSendContractMethod => {
-				// 		const value = BigInt(10);
-				// 		const tempAccount = await prepareForTransfer(value.toString());
-				// 		await signAndSendContractMethod(
-				// 			contractDeployed.provider,
-				// 			contractDeployed.options.address as string,
-				// 			contractDeployed.methods.transfer(tempAccount.address, value),
-				// 			pkAccount.privateKey,
-				// 		);
+				it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
+					'should transfer tokens with local wallet %p',
+					async signAndSendContractMethod => {
+						const value = BigInt(10);
+						const tempAccount = await prepareForTransfer(value.toString());
+						await signAndSendContractMethod(
+							contractDeployed.provider,
+							contractDeployed.options.address as string,
+							contractDeployed.methods.transfer(tempAccount.address, value),
+							pkAccount.privateKey,
+						);
 
-				// 		expect(
-				// 			await contractDeployed.methods.balanceOf(tempAccount.address).call(),
-				// 		).toBe(value);
-				// 	},
-				// );
+						expect(
+							await contractDeployed.methods.balanceOf(tempAccount.address).call(),
+						).toBe(value);
+					},
+				);
 
-				// it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
-				// 	'should approve and transferFrom tokens with local wallet %p',
-				// 	async signAndSendContractMethod => {
-				// 		const value = BigInt(10);
-				// 		const transferFromValue = BigInt(4);
-				// 		const tempAccount = await prepareForTransfer(value.toString());
-				// 		// approve
-				// 		const res = await signAndSendContractMethod(
-				// 			contract.provider,
-				// 			contractDeployed.options.address as string,
-				// 			contractDeployed.methods.approve(pkAccount.address, value),
-				// 			pkAccount.privateKey,
-				// 		);
+				it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
+					'should approve and transferFrom tokens with local wallet %p',
+					async signAndSendContractMethod => {
+						const value = BigInt(10);
+						const transferFromValue = BigInt(4);
+						const tempAccount = await prepareForTransfer(value.toString());
+						// approve
+						const res = await signAndSendContractMethod(
+							contract.provider,
+							contractDeployed.options.address as string,
+							contractDeployed.methods.approve(pkAccount.address, value),
+							pkAccount.privateKey,
+						);
 
-				// 		expect(res.status).toBe(BigInt(1));
-				// 		expect(
-				// 			(res.logs as LogsOutput[])[0].topics[2].endsWith(
-				// 				pkAccount.address.substring(2),
-				// 			),
-				// 		).toBe(true);
+						expect(res.status).toBe(BigInt(1));
+						expect(
+							(res.logs as LogsOutput[])[0].topics[2].endsWith(
+								pkAccount.address.substring(2),
+							),
+						).toBe(true);
 
-				// 		// transferFrom
-				// 		await signAndSendContractMethod(
-				// 			contract.provider,
-				// 			contractDeployed.options.address as string,
-				// 			contractDeployed.methods.transferFrom(
-				// 				pkAccount.address,
-				// 				tempAccount.address,
-				// 				transferFromValue,
-				// 			),
-				// 			pkAccount.privateKey,
-				// 		);
-				// 		expect(
-				// 			await contractDeployed.methods.balanceOf(tempAccount.address).call(),
-				// 		).toBe(transferFromValue);
+						// transferFrom
+						await signAndSendContractMethod(
+							contract.provider,
+							contractDeployed.options.address as string,
+							contractDeployed.methods.transferFrom(
+								pkAccount.address,
+								tempAccount.address,
+								transferFromValue,
+							),
+							pkAccount.privateKey,
+						);
+						expect(
+							await contractDeployed.methods.balanceOf(tempAccount.address).call(),
+						).toBe(transferFromValue);
 
-				// 		// allowance
-				// 		expect(
-				// 			await contractDeployed.methods
-				// 				.allowance(pkAccount.address, pkAccount.address)
-				// 				.call(),
-				// 		).toBe(value - transferFromValue);
-				// 	},
-				// );
+						// allowance
+						expect(
+							await contractDeployed.methods
+								.allowance(pkAccount.address, pkAccount.address)
+								.call(),
+						).toBe(value - transferFromValue);
+					},
+				);
 
-				// it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
-				// 	'should approve and transferFrom tokens with local wallet %p',
-				// 	async signAndSendContractMethod => {
-				// 		const value = BigInt(10);
-				// 		const transferFromValue = BigInt(4);
-				// 		const tempAccount = await prepareForTransfer(value.toString());
-				// 		// approve
-				// 		await signAndSendContractMethod(
-				// 			contract.provider,
-				// 			contractDeployed.options.address as string,
-				// 			contractDeployed.methods.approve(
-				// 				tempAccount.address,
-				// 				transferFromValue,
-				// 			),
-				// 			tempAccount.privateKey,
-				// 		);
+				it.each([signAndSendContractMethodEIP1559, signAndSendContractMethodEIP2930])(
+					'should approve and transferFrom tokens with local wallet %p',
+					async signAndSendContractMethod => {
+						const value = BigInt(10);
+						const transferFromValue = BigInt(4);
+						const tempAccount = await prepareForTransfer(value.toString());
+						// approve
+						await signAndSendContractMethod(
+							contract.provider,
+							contractDeployed.options.address as string,
+							contractDeployed.methods.approve(
+								tempAccount.address,
+								transferFromValue,
+							),
+							tempAccount.privateKey,
+						);
 
-				// 		// allowance
-				// 		expect(
-				// 			await contractDeployed.methods
-				// 				.allowance(tempAccount.address, tempAccount.address)
-				// 				.call(),
-				// 		).toBe(transferFromValue);
+						// allowance
+						expect(
+							await contractDeployed.methods
+								.allowance(tempAccount.address, tempAccount.address)
+								.call(),
+						).toBe(transferFromValue);
 
-				// 		// increaseAllowance
-				// 		await signAndSendContractMethod(
-				// 			contract.provider,
-				// 			contractDeployed.options.address as string,
-				// 			contractDeployed.methods.increaseAllowance(
-				// 				tempAccount.address,
-				// 				transferFromValue,
-				// 			),
-				// 			tempAccount.privateKey,
-				// 		);
+						// increaseAllowance
+						await signAndSendContractMethod(
+							contract.provider,
+							contractDeployed.options.address as string,
+							contractDeployed.methods.increaseAllowance(
+								tempAccount.address,
+								transferFromValue,
+							),
+							tempAccount.privateKey,
+						);
 
-				// 		// allowance
-				// 		expect(
-				// 			await contractDeployed.methods
-				// 				.allowance(tempAccount.address, tempAccount.address)
-				// 				.call(),
-				// 		).toBe(transferFromValue + transferFromValue);
-				// 	},
-				// );
+						// allowance
+						expect(
+							await contractDeployed.methods
+								.allowance(tempAccount.address, tempAccount.address)
+								.call(),
+						).toBe(transferFromValue + transferFromValue);
+					},
+				);
 			});
 
 			describeIf(isWs)('events', () => {

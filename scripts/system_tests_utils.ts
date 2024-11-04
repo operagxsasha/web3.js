@@ -368,13 +368,9 @@ export const signTxAndSendEIP1559 = async (
 		from: acc.address,
 	};
 
-	const result = await web3.eth.sendTransaction(txObj, undefined, {
+	return web3.eth.sendTransaction(txObj, undefined, {
 		checkRevertBeforeSending: false,
 	});
-
-	// await closeOpenConnection(web3);
-
-	return result;
 };
 
 export const signTxAndSendEIP2930 = async (
@@ -392,13 +388,9 @@ export const signTxAndSendEIP2930 = async (
 		from: acc.address,
 	};
 
-	const result = await web3.eth.sendTransaction(txObj, undefined, {
+	return web3.eth.sendTransaction(txObj, undefined, {
 		checkRevertBeforeSending: false,
 	});
-
-	// await closeOpenConnection(web3);
-
-	return result;
 };
 
 export const signAndSendContractMethodEIP1559 = async (
