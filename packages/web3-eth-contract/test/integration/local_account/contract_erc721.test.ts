@@ -51,11 +51,8 @@ describe('contract', () => {
 
 			sendOptions = {
 				from: localAccount.address,
-				gas: '1000000',
 			};
-			contractDeployed = await contract
-				.deploy(deployOptions)
-				.send({ ...sendOptions, gas: '3000000' });
+			contractDeployed = await contract.deploy(deployOptions).send({ ...sendOptions });
 		});
 
 		afterAll(async () => {
@@ -174,14 +171,9 @@ describe('contract', () => {
 		it.each(['0x1', '0x2'])('should approve and then transferFrom item %p', async type => {
 			const tempAccount = await createLocalAccount(web3);
 			const toAccount = await createLocalAccount(web3);
-			const localSendOptions = {
-				from: localAccount.address,
-				gas: '100000',
-			};
-
 			const awardReceipt = await contractDeployed.methods
 				.awardItem(tempAccount.address, 'http://my-nft-award')
-				.send({ ...localSendOptions, type });
+				.send({ ...sendOptions, type });
 			expect(awardReceipt.events).toBeDefined();
 			expect(awardReceipt.events?.Transfer).toBeDefined();
 			expect(awardReceipt.events?.Transfer.event).toBe('Transfer');
@@ -203,7 +195,7 @@ describe('contract', () => {
 			const approveReceipt = await contractDeployed.methods
 				.approve(toAccount.address, tokenId)
 				.send({
-					...localSendOptions,
+					...sendOptions,
 					type,
 					from: tempAccount.address,
 				});
@@ -231,7 +223,7 @@ describe('contract', () => {
 			const safeTransferFromReceipt = await contractDeployed.methods
 				.safeTransferFrom(tempAccount.address, toAccount.address, tokenId)
 				.send({
-					...localSendOptions,
+					...sendOptions,
 					type,
 					from: toAccount.address,
 				});
