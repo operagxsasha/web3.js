@@ -44,6 +44,7 @@ import {
 	recover,
 	recoverTransaction,
 	sign,
+	signRaw,
 	signTransaction,
 	privateKeyToPublicKey,
 } from '../../src/account';
@@ -54,10 +55,12 @@ import {
 	invalidPrivateKeytoAccountData,
 	invalidPrivateKeyToAddressData,
 	signatureRecoverData,
+	signatureRecoverWithoutPrefixData,
 	transactionsTestData,
 	validDecryptData,
 	validEncryptData,
 	validHashMessageData,
+	validHashMessageWithoutPrefixData,
 	validPrivateKeytoAccountData,
 	validPrivateKeyToAddressData,
 	validPrivateKeyToPublicKeyData,
@@ -98,9 +101,9 @@ describe('accounts', () => {
 	describe('privateKeyToAccount', () => {
 		describe('valid cases', () => {
 			it.each(validPrivateKeytoAccountData)('%s', (input, output) => {
-				expect(JSON.stringify(privateKeyToAccount(input.address, input.ignoreLength))).toEqual(
-					JSON.stringify(output),
-				);
+				expect(
+					JSON.stringify(privateKeyToAccount(input.address, input.ignoreLength)),
+				).toEqual(JSON.stringify(output));
 			});
 		});
 
@@ -158,6 +161,12 @@ describe('accounts', () => {
 		});
 	});
 
+	describe('Hash Message Without Prefix', () => {
+		it.each(validHashMessageWithoutPrefixData)('%s', (message, hash) => {
+			expect(hashMessage(message, true)).toEqual(hash);
+		});
+	});
+
 	describe('Sign Message', () => {
 		describe('sign', () => {
 			it.each(signatureRecoverData)('%s', (data, testObj) => {
@@ -171,6 +180,31 @@ describe('accounts', () => {
 		describe('recover', () => {
 			it.each(signatureRecoverData)('%s', (data, testObj) => {
 				const address = recover(data, testObj.signatureOrV, testObj.prefixedOrR, testObj.s);
+				expect(address).toEqual(testObj.address);
+			});
+		});
+	});
+
+	describe('Sign Raw Message', () => {
+		describe('signRaw', () => {
+			it.each(signatureRecoverWithoutPrefixData)('%s', (data, testObj) => {
+				const result = signRaw(data, testObj.privateKey);
+				expect(result.signature).toEqual(testObj.signature || testObj.signatureOrV); // makes sure we get signature and not V value
+				expect(result.r).toEqual(testObj.r);
+				expect(result.s).toEqual(testObj.s);
+			});
+		});
+
+		describe('recover', () => {
+			it.each(signatureRecoverWithoutPrefixData)('%s', (data, testObj) => {
+				const hashedMessage = hashMessage(data, true); // hash the message first without prefix
+				const address = recover(
+					hashedMessage,
+					testObj.signatureOrV,
+					testObj.prefixedOrR,
+					testObj.s,
+					true, // make sure the prefixed is true since we already hashed the message
+				);
 				expect(address).toEqual(testObj.address);
 			});
 		});
@@ -213,13 +247,17 @@ describe('accounts', () => {
 				// make sure decrypt does not throw invalid password error
 				const result = await decrypt(keystore, input[1]);
 
-				expect(JSON.stringify(result)).toEqual(JSON.stringify(privateKeyToAccount(input[3])));
+				expect(JSON.stringify(result)).toEqual(
+					JSON.stringify(privateKeyToAccount(input[3])),
+				);
 
 				const keystoreString = JSON.stringify(keystore);
 
 				const stringResult = await decrypt(keystoreString, input[1], true);
 
-				expect(JSON.stringify(stringResult)).toEqual(JSON.stringify(privateKeyToAccount(input[3])));
+				expect(JSON.stringify(stringResult)).toEqual(
+					JSON.stringify(privateKeyToAccount(input[3])),
+				);
 			});
 		});
 

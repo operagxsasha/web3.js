@@ -62,10 +62,15 @@ describe(`${getSystemTestBackend()} tests - getStorageAt`, () => {
 	)('getStorageAt', async ({ storageSlot, block }) => {
 		let blockData = mainnetBlockData[block];
 		if (block === 'blockHash' || block === 'blockNumber') {
-			const blockNumber = await web3.eth.getBlockNumber();
-			blockData = Number(blockNumber);
+			/**
+			 * @NOTE Getting a block too far back in history
+			 * results in a missing trie node error, so
+			 * we get latest block for this test
+			 */
+			const b = await web3.eth.getBlock('finalized');
+			blockData = Number(b.number);
 			if (block === 'blockHash') {
-				blockData = (await web3.eth.getBlock(blockNumber)).hash as string;
+				blockData = b.hash as string;
 			}
 		}
 		const result = await web3.eth.getStorageAt(
@@ -80,7 +85,7 @@ describe(`${getSystemTestBackend()} tests - getStorageAt`, () => {
 		} else if (block === 'blockHash' || block === 'blockNumber') {
 			// eslint-disable-next-line jest/no-conditional-expect
 			expect(result).toBe(
-				'0x00000000000000000000000000000000000000000000000000b8b61e3be91403',
+				'0x00000000000000000000000000000000000000000000000000c34723fc9a9240',
 			);
 		} else {
 			// eslint-disable-next-line jest/no-conditional-expect
