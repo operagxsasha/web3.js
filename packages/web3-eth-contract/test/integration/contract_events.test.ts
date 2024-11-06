@@ -15,7 +15,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// import { EventLog } from 'web3-types';
 import { Contract, EventLog } from '../../src';
 import { BasicAbi, BasicBytecode } from '../shared_fixtures/build/Basic';
 import {
@@ -26,6 +25,7 @@ import {
 	isHttp,
 	createTempAccount,
 	closeOpenConnection,
+	sendFewSampleTxs,
 } from '../fixtures/system_test_utils';
 
 describe('contract', () => {
@@ -156,14 +156,6 @@ describe('contract', () => {
 					.send(sendOptions);
 			}
 
-			const promises = eventValues.map(eventValue =>
-				contractDeployed.methods
-					.firesMultiValueEvent('Event Value', eventValue, false)
-					.send(sendOptions),
-			);
-
-			await Promise.all(promises);
-
 			await expect(eventPromise).resolves.toEqual(
 				expect.arrayContaining([
 					expect.objectContaining({ event: 'MultiValueEvent' }),
@@ -197,7 +189,6 @@ describe('contract', () => {
 	});
 
 	describeIf(isWs)('getPastEvents', () => {
-		// TODO: Debug why this tests is hanging the websocket
 		it('should return all past events using earliest and latest options', async () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 1', 11, true)
@@ -205,6 +196,8 @@ describe('contract', () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 2', 12, true)
 				.send(sendOptions);
+
+			await sendFewSampleTxs(2);
 
 			expect(
 				await contractDeployed.getPastEvents('MultiValueEvent', {
@@ -222,6 +215,8 @@ describe('contract', () => {
 				.firesMultiValueEvent('New Greeting 2', 12, true)
 				.send(sendOptions);
 
+			await sendFewSampleTxs(2);
+
 			expect(
 				await contractDeployed.getPastEvents('MultiValueEvent', {
 					fromBlock: 0,
@@ -238,6 +233,8 @@ describe('contract', () => {
 				.firesMultiValueEvent('New Greeting 2', 12, true)
 				.send(sendOptions);
 
+			await sendFewSampleTxs(2);
+
 			expect(
 				await contractDeployed.getPastEvents('MultiValueEvent', {
 					fromBlock: '0',
@@ -253,6 +250,8 @@ describe('contract', () => {
 			await contractDeployed.methods
 				.firesMultiValueEvent('New Greeting 2', 12, true)
 				.send(sendOptions);
+
+			await sendFewSampleTxs(2);
 
 			expect(
 				await contractDeployed.getPastEvents('MultiValueEvent', {

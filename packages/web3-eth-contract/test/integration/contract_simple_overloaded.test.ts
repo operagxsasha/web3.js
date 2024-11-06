@@ -36,7 +36,7 @@ describe('SimpleOverloaded', () => {
 			.deploy({
 				data: SimpleOverloadedBytecode,
 			})
-			.send({ from: mainAcc.address, gas: '10000000' });
+			.send({ from: mainAcc.address });
 	});
 
 	afterAll(async () => {

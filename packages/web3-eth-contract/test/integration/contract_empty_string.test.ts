@@ -39,7 +39,7 @@ describe('request empty string from contract', () => {
 			arguments: [],
 		};
 
-		sendOptions = { from: acc.address, gas: '1000000' };
+		sendOptions = { from: acc.address };
 	});
 
 	afterAll(async () => {

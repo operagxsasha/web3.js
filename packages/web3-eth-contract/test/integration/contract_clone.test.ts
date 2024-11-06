@@ -39,7 +39,7 @@ describe('contract', () => {
 				arguments: ['My Greeting'],
 			};
 
-			sendOptions = { from: acc.address, gas: '1000000' };
+			sendOptions = { from: acc.address };
 		});
 
 		afterAll(async () => {

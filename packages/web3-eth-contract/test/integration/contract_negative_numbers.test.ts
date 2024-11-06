@@ -43,10 +43,7 @@ describe('Contract - NegativeNumbers.sol', () => {
 			data: NegativeNumbersBytecode,
 			arguments: [storedNegativeNumber],
 		};
-		sendOptions = {
-			from: account.address,
-			gas: '1000000',
-		};
+		sendOptions = { from: account.address };
 
 		contractDeployed = await contract.deploy(deployOptions).send(sendOptions);
 	});
