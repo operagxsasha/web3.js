@@ -17,13 +17,11 @@ along with web3.js.  If not, see <http://www.gnu.org/licenses/>.
 import { Web3Eth } from 'web3-eth';
 import { FMT_BYTES, FMT_NUMBER } from 'web3-types';
 import { Contract, createContractAddress } from '../../src';
-import { sleep } from '../shared_fixtures/utils';
 import { ERC721TokenAbi, ERC721TokenBytecode } from '../shared_fixtures/build/ERC721Token';
 import { GreeterBytecode, GreeterAbi } from '../shared_fixtures/build/Greeter';
 import { DeployRevertAbi, DeployRevertBytecode } from '../shared_fixtures/build/DeployRevert';
 import {
 	getSystemTestProvider,
-	isWs,
 	createTempAccount,
 	createNewAccount,
 	signTxAndSendEIP2930,
@@ -245,26 +243,18 @@ describe('contract', () => {
 
 		it('should emit the "confirmation" event', async () => {
 			const confirmationHandler = jest.fn();
-			contract.setConfig({ transactionConfirmationBlocks: 1 });
-			await contract
+			contract.setConfig({ transactionConfirmationBlocks: 2 });
+
+			const promiEvent = contract
 				.deploy(deployOptions)
 				.send(sendOptions)
 				.on('confirmation', confirmationHandler);
 
-			// Wait for some time to allow the transaction to be processed
-			await sleep(500);
-
-			// Deploy once again to trigger block mining to trigger confirmation
-			// We can send any other transaction as well
-			await contract.deploy(deployOptions).send(sendOptions);
+			// Deploy the contract
+			await promiEvent;
 
 			await sendFewSampleTxs(3);
 
-			// Wait for some fraction of time to trigger the handler
-			// On http we use polling to get confirmation, so wait a bit longer
-			await sleep(isWs ? 500 : 2000);
-
-			// eslint-disable-next-line jest/no-standalone-expect
 			expect(confirmationHandler).toHaveBeenCalled();
 		});
 
